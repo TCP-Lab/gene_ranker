@@ -4,6 +4,9 @@ from statistics import mean
 from dataclasses import dataclass
 from typing import Callable, Optional
 from shutil import which
+from pydeseq2.ds import DeseqDataSet, DeseqStats
+from multiprocessing import cpu_count
+from math import floor
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
@@ -60,7 +63,42 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
 
 def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
-    pass
+    case_cols = [x for x in dual_dataset.case.columns if x != dual_dataset.on]
+    ctrl_cols = [x for x in dual_dataset.control.columns if x != dual_dataset.on]
+    labels = ["case"] * len(case_cols) + ["control"] * len(ctrl_cols)
+    metadata = pd.DataFrame({
+        "sample": case_cols + ctrl_cols,
+        "status": labels
+    })
+    metadata = metadata.set_index("sample")
+    data = dual_dataset.merged.set_index(dual_dataset.on)
+
+    data = round((2 ** data) - 1)
+    data = data.applymap(int)
+    data = data.transpose()
+
+    print(data)
+    print(metadata)
+
+    data = DeseqDataSet(
+        counts=data,
+        metadata=metadata,
+        design_factors="status",
+        ref_level=["status", "control"],
+        n_cpus=cpu_count(),
+        quiet=True
+    )
+    
+    data.deseq2()
+    stats = DeseqStats(data)
+    stats.run_wald_test()
+    stats.lfc_shrink(coeff="status_case_vs_control")
+
+    shrunk = stats.LFC
+
+    print(shrunk)
+
+    return shrunk
 
 
 def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
@@ -99,4 +137,3 @@ RANKING_METHODS = {
         desc = "Use a DESeq2-normalized Hedges' G metric"
     ),
 }
-
