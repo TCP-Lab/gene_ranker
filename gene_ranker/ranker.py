@@ -19,6 +19,20 @@ def filter_dataset(
     only_in: Optional[list[str]] = None,
     id_col="gene_id",
 ) -> pd.DataFrame:
+    """Filters a dataset according to simple criteria.
+
+    Filters based on the average expression of the genes (across all samples)
+    and a pre-determined list of genes.
+
+    Args:
+        data (pd.DataFrame): The dataframe to filter.
+        id_col (str): The name of the column with the gene IDs.
+        avg_mean_threshold (int or None): Keep only genes with a general average
+            expression over this threshold. If None, does not filter.
+            Defaults to None.
+        only_in (list[str] or None): Keep genes only in this list. If None,
+            does not filter. Defaults to None.
+    """
     data = data.set_index(id_col)
     if avg_mean_threshold:
         means = data.apply(mean, axis=1)
@@ -40,6 +54,13 @@ def filter_dataset(
 def run_method(
     case_matrix: Path, control_matrix: Path, method: RankingMethod
 ) -> pd.DataFrame:
+    """Run a RankingMethod on two frames.
+
+    Args:
+        case_matrix (Path): Path to the case matrix to be read. In `csv` format.
+        control_matrix (Path): Same as above, with the control matrix.
+        method (RankingMethod): A valid RankingMethod.
+    """
     case_matrix: pd.DataFrame = pd.read_csv(case_matrix)
     control_matrix: pd.DataFrame = pd.read_csv(control_matrix)
 

@@ -54,7 +54,7 @@ class DualDataset:
         This assures that the row order and quantity is the same among the two
         datasets as if they were just merged.
         """
-        _ = self.merged
+        _ = self.merged # This call is not useless - it triggers self.merged(self).
         self._case = None
         self._control = None
 

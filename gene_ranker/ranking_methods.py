@@ -9,6 +9,11 @@ class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
 
 def check_external_command(command: str, path: None) -> None:
+    """Check the presence of a callable for sys-created processes.
+
+    Raises:
+        MissingExternalDependency: If the callable is not found.
+    """
     if which(command, path=path):
         return
     raise MissingExternalDependency(
@@ -17,12 +22,28 @@ def check_external_command(command: str, path: None) -> None:
 
 @dataclass
 class RankingMethod:
+    """Represents a standard RankingMethod"""
     name: str
+    """The human-friendly name of the method"""
     exec: Callable
+    """The callable to call with this method"""
     parser: Optional[Callable]
+    """An ArgumentParser to use to add options to the callable for this method."""
     desc: Optional[str] = None
+    """A human-friendly description of the method."""
 
 def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
+    """Perform a simple fold-change ranking metric.
+
+    Expects log(x + 1) count data, or generally logged data as input.
+    For each gene, we compute `mean(case) - mean(control)`, and the result is
+    saved.
+
+    Args:
+        dual_dataset (DualDataset): A DualDataset to calculate the result from.
+    Returns:
+        A pd.DataFrame with two columns, a `gene_id` column and a `ranking` column.
+    """
     dual_dataset.sync()
 
     case = dual_dataset.case.set_index("gene_id")
@@ -50,6 +71,8 @@ def norm_hedges_g_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     pass
 
 
+# Tried with an enum but it's just too much of a bother to implement.
+# A simple dict is fine, ultimately.
 RANKING_METHODS = {
     "fold_change": RankingMethod(
         name = "Fold Change",
