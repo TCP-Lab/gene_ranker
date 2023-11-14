@@ -85,9 +85,6 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     data = data.applymap(int)
     data = data.transpose()
 
-    print(data)
-    print(metadata)
-
     data = DeseqDataSet(
         counts=data,
         metadata=metadata,
@@ -104,13 +101,33 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     shrunk = stats.LFC
 
-    print(shrunk)
+    result = pd.DataFrame({
+        "gene_id": shrunk.index,
+        "ranking": rebase_log(shrunk["status_case_vs_control"])
+    })
 
-    return shrunk
+    return result
 
 
 def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
-    pass
+    if not shutil.which("fast-cohen"):
+        raise MissingExternalDependency((
+            "Missing the fast-cohen executable."
+            " See https://github.com/mrhedmad/fast-cohen/ to download."
+        ))
+
+    with tempfile.NamedTemporaryFile() as case, \
+            tempfile.NamedTemporaryFile() as control, \
+            tempfile.NamedTemporaryFile() as result:
+        move_col_to_front(dual_dataset.case, dual_dataset.on).to_csv(case, index=False)
+        move_col_to_front(dual_dataset.control, dual_dataset.on).to_csv(control, index=False)
+
+        subprocess.run(["fast-cohen", case.name, control.name, result.name]) 
+    
+        data = pd.read_csv(result)
+
+
+    return data
 
 
 def norm_hedges_g_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
