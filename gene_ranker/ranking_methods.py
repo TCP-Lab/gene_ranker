@@ -3,25 +3,16 @@ import pandas as pd
 from statistics import mean
 from dataclasses import dataclass
 from typing import Callable, Optional
-from shutil import which
+import shutil
 from pydeseq2.ds import DeseqDataSet, DeseqStats
 from multiprocessing import cpu_count
-from math import floor
+from math import floor, log2, exp
+import tempfile
+import subprocess
+from pydeseq2.preprocessing import deseq2_norm
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
-
-def check_external_command(command: str, path: None) -> None:
-    """Check the presence of a callable for sys-created processes.
-
-    Raises:
-        MissingExternalDependency: If the callable is not found.
-    """
-    if which(command, path=path):
-        return
-    raise MissingExternalDependency(
-        f"External dep '{command}' could not be found in '{path or '$PATH'}'"
-    )
 
 @dataclass
 class RankingMethod:
@@ -61,6 +52,23 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return frame
 
+def move_col_to_front(data: pd.DataFrame, col_name) -> pd.DataFrame:
+    cols = data.columns.tolist()
+    assert col_name in cols
+    cols.insert(0, cols.pop(cols.index(col_name)))
+    data = data.loc[:, cols]
+
+    return data
+
+def norm_with_deseq(data: pd.DataFrame):
+    # Convert back to counts
+
+    data = round((2 ** data) - 1)
+    data = data.applymap(int)
+    data = data.transpose()
+    data = deseq2_norm(data)[0].transpose()
+
+    return data
 
 def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     case_cols = [x for x in dual_dataset.case.columns if x != dual_dataset.on]
