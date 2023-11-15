@@ -133,7 +133,8 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
         subprocess.run(["fast-cohen", case.name, control.name, result.name]) 
     
         data = pd.read_csv(result)
-
+        # Rename the 'row_names' col
+        data = data.rename(columns = {"row_names": dual_dataset.on, "cohen_d": "ranking"})
 
     return data
 
