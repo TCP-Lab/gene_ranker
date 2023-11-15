@@ -122,6 +122,8 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
             " See https://github.com/mrhedmad/fast-cohen/ to download."
         ))
 
+    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+
     with tempfile.NamedTemporaryFile() as case, \
             tempfile.NamedTemporaryFile() as control, \
             tempfile.NamedTemporaryFile() as result:
