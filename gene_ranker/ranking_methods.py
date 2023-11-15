@@ -6,7 +6,6 @@ from typing import Callable, Optional
 import shutil
 from pydeseq2.ds import DeseqDataSet, DeseqStats
 from multiprocessing import cpu_count
-from math import floor, log2, exp
 import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm
