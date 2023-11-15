@@ -20,6 +20,12 @@ gene_1,-2.666666666666667
 gene_2,0.5
 gene_3,4.6
 """
+expected_cohen_d = """\
+gene_id,ranking
+gene_1,-2.1213203435596424
+gene_2,0.8142253935739803
+gene_3,1.9986492873450863
+"""
 
 @pytest.fixture
 def case_data_path(tmp_path: Path):
@@ -37,7 +43,7 @@ def control_data_path(tmp_path: Path):
 
     return target
 
-def test_integration(tmp_path, case_data_path, control_data_path):
+def test_integration_fold_change(tmp_path, case_data_path, control_data_path):
     target = tmp_path / "output.csv"
     args = [case_data_path, control_data_path, "fold_change", "--output-file", target]
     args = [str(x) for x in args]
@@ -48,4 +54,16 @@ def test_integration(tmp_path, case_data_path, control_data_path):
         output = stream.read()
 
     assert output == expected_fold_change
+
+def test_integration_cohen(tmp_path, case_data_path, control_data_path):
+    target = tmp_path / "output.csv"
+    args = [case_data_path, control_data_path, "norm_cohen_d", "--output-file", target]
+    args = [str(x) for x in args]
+
+    bin(args)
+
+    with target.open("r") as stream:
+        output = stream.read()
+
+    assert output == expected_cohen_d
 
