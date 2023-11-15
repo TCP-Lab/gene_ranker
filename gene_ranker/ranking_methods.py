@@ -59,13 +59,20 @@ def move_col_to_front(data: pd.DataFrame, col_name) -> pd.DataFrame:
 
     return data
 
-def norm_with_deseq(data: pd.DataFrame):
+def norm_with_deseq(data: pd.DataFrame, id_col = None):
+    # Move the ID col to the index if needed
+    assert id_col in data.columns
+    if id_col:
+        data = data.set_index(id_col)
     # Convert back to counts
-
     data = round((2 ** data) - 1)
-    data = data.applymap(int)
+    data = data.map(int)
     data = data.transpose()
     data = deseq2_norm(data)[0].transpose()
+
+    if id_col:
+        data[id_col] = data.index
+        data.reset_index(drop=True)
 
     return data
 
