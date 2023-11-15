@@ -108,8 +108,8 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     shrunk = stats.LFC
 
     result = pd.DataFrame({
-        "gene_id": shrunk.index,
-        "ranking": rebase_log(shrunk["status_case_vs_control"])
+        dual_dataset.on: shrunk.index,
+        "ranking": shrunk["status_case_vs_control"]
     })
 
     return result
