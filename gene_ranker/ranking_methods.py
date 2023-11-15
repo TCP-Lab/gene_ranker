@@ -140,7 +140,7 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
 
 def norm_hedges_g_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
-    pass
+    raise NotImplementedError("This is not implemented yet, sorry!")
 
 
 # Tried with an enum but it's just too much of a bother to implement.
