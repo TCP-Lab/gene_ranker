@@ -54,7 +54,7 @@ class DualDataset:
         This assures that the row order and quantity is the same among the two
         datasets as if they were just merged.
         """
-        _ = self.merged
+        _ = self.merged # This call is not useless - it triggers self.merged(self).
         self._case = None
         self._control = None
 
@@ -73,8 +73,9 @@ class DualDataset:
 
     @merged.setter
     def merged(self, value: pd.DataFrame):
-        if not two_way_in(self._merged.columns, self.value.columns):
+        if not two_way_in(self._merged.columns, value.columns):
             raise ValueError("Cannot set new merged dataframe with different columns.")
+        value = value.reset_index(drop=True) # in case the 'on' col is in the index
         self._merged = value.sort_values(by=self.on)
         self._case = None
         self._control = None
@@ -100,11 +101,13 @@ class DualDataset:
     @case.setter
     def case(self, value):
         self._merged = None
+        value = value.reset_index(drop=True) # in case the 'on' col is in the index
         self._case_cols = value.columns
         self._case = value.sort_values(by=self.on)
 
     @control.setter
     def control(self, value):
         self._merged = None
+        value = value.reset_index(drop=True) # in case the 'on' col is in the index
         self._control_cols = value.columns
         self._control = value.sort_values(by=self.on)

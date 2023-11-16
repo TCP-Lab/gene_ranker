@@ -25,11 +25,13 @@ def bin(args = None):
     )
 
     parser.add_argument(
-        "case_matrix", help="Expression Matrix with case samples.", type=Path
+        "case_matrix", help="Expression Matrix with log2 expression of case samples.", type=Path
     )
     parser.add_argument(
-        "control_matrix", help="Expression Matrix with control samples.", type=Path
+        "control_matrix", help="Expression Matrix with log2 expression of control samples.", type=Path
     )
+
+    # TODO: Edit this to add the custom subparsers from each ranking method.
     parser.add_argument(
         "method",
         help="Ranking method",

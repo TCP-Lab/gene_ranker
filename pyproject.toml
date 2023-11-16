@@ -10,7 +10,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "pydeseq2==0.4.1",
+    "pandas==2.2.1"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/MrHedmad/gene_ranker"
