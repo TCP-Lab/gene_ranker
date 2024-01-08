@@ -3,6 +3,9 @@ from gene_ranker.ranking_methods import RANKING_METHODS
 from pathlib import Path
 import sys
 import argparse
+import logging
+
+log = logging.getLogger("archon")
 
 class ListMethodsAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -53,6 +56,8 @@ def bin(args = None):
         method=RANKING_METHODS[args.method],
         shared_col=args.id_col
     )
+    
+    log.info("Writing output to {}".format(args.output_file if args.output_file else "stdout"))
     
     out_stream = args.output_file.open("w+") if args.output_file else sys.stdout
     result.to_csv(out_stream, index=False)

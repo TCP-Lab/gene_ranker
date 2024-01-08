@@ -41,6 +41,10 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     case = dual_dataset.case.set_index(dual_dataset.on)
     control = dual_dataset.control.set_index(dual_dataset.on)
+    if case.empty:
+        raise ValueError("Case matrix is empty. Cannot compute fold change.")
+    if control.empty:
+        raise ValueError("Control matrix is empty. Cannot compute fold change.")
     case_means = case.apply(mean, axis=1)
     control_means = control.apply(mean, axis=1)
 
@@ -96,13 +100,11 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
         metadata=metadata,
         design_factors="status",
         ref_level=["status", "control"],
-        n_cpus=cpu_count(),
         quiet=True
     )
     
     data.deseq2()
     stats = DeseqStats(data)
-    stats.run_wald_test()
     stats.lfc_shrink(coeff="status_case_vs_control")
 
     shrunk = stats.LFC
@@ -123,6 +125,10 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
         ))
 
     dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+    if dual_dataset.case.empty:
+        raise ValueError("Case matrix is empty. Cannot compute norm cohen D")
+    if dual_dataset.control.empty:
+        raise ValueError("Control matrix is empty. Cannot compute norm cohen D")
 
     with tempfile.NamedTemporaryFile() as case, \
             tempfile.NamedTemporaryFile() as control, \

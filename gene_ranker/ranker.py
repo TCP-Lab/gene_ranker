@@ -10,7 +10,7 @@ from typing import Optional
 from gene_ranker.dual_dataset import DualDataset
 from gene_ranker.ranking_methods import RankingMethod
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("archon")  # An archon was an ancient greek magistrate
 
 def filter_dataset(
@@ -62,10 +62,13 @@ def run_method(
         control_matrix (Path): Same as above, with the control matrix.
         method (RankingMethod): A valid RankingMethod.
     """
-    case_matrix: pd.DataFrame = pd.read_csv(case_matrix)
-    control_matrix: pd.DataFrame = pd.read_csv(control_matrix)
+    case_matrix_data: pd.DataFrame = pd.read_csv(case_matrix)
+    control_matrix_data: pd.DataFrame = pd.read_csv(control_matrix)
 
-    dual_dataset = DualDataset(case=case_matrix, control=control_matrix, on=shared_col)
+    log.info(f"Loaded a {case_matrix_data.shape[1]} col by {case_matrix_data.shape[0]} rows case matrix from {case_matrix}")
+    log.info(f"Loaded a {control_matrix_data.shape[1]} col by {control_matrix_data.shape[0]} rows case matrix from {control_matrix}")
+
+    dual_dataset = DualDataset(case=case_matrix_data, control=control_matrix_data, on=shared_col)
 
     result = method.exec(dual_dataset=dual_dataset)
 
