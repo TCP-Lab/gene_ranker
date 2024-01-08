@@ -55,6 +55,21 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return frame
 
+def norm_fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
+    """Identical to fold_change_ranking, but normalize beforehand.
+
+    Args:
+        dual_dataset (DualDataset): A DualDataset to calculate the result from.
+    Returns:
+        A pd.DataFrame with two columns, a `gene_id` column and a `ranking` column.
+    """
+    dual_dataset.sync()
+
+    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+
+    return fold_change_ranking(dual_dataset)
+
+
 def move_col_to_front(data: pd.DataFrame, col_name) -> pd.DataFrame:
     cols = data.columns.tolist()
     assert col_name in cols
@@ -169,6 +184,12 @@ RANKING_METHODS = {
         exec = norm_cohen_d_ranking,
         parser = None,
         desc = "Use a DESeq2-normalized Cohen's D metric"
+    ),
+    "norm_fold_change": RankingMethod(
+        name = "Normalized Fold Change",
+        exec = norm_fold_change_ranking,
+        parser = None,
+        desc = "Use a DESeq2-normalized fold change metric"
     ),
     "norm_hedges_g": RankingMethod(
         name = "Normalized Hedges' G",
