@@ -52,7 +52,8 @@ def filter_dataset(
 
 
 def run_method(
-    case_matrix: Path, control_matrix: Path, method: RankingMethod
+    case_matrix: Path, control_matrix: Path, method: RankingMethod,
+    shared_col: str = "gene_id"
 ) -> pd.DataFrame:
     """Run a RankingMethod on two frames.
 
@@ -64,7 +65,7 @@ def run_method(
     case_matrix: pd.DataFrame = pd.read_csv(case_matrix)
     control_matrix: pd.DataFrame = pd.read_csv(control_matrix)
 
-    dual_dataset = DualDataset(case=case_matrix, control=control_matrix)
+    dual_dataset = DualDataset(case=case_matrix, control=control_matrix, on=shared_col)
 
     result = method.exec(dual_dataset=dual_dataset)
 

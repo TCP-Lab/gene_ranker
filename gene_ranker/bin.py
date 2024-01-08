@@ -42,12 +42,16 @@ def bin(args = None):
         "--output-file", help="Output file path", type=Path, default=None
     )
 
+    parser.add_argument(
+        "--id-col", help="Name of shared ID comlumn between files", type=str, default="gene_id"
+    )
     args = parser.parse_args(args)
 
     result = run_method(
         case_matrix=args.case_matrix,
         control_matrix=args.control_matrix,
         method=RANKING_METHODS[args.method],
+        shared_col=args.id_col
     )
     
     out_stream = args.output_file.open("w+") if args.output_file else sys.stdout

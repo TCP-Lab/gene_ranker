@@ -39,15 +39,15 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     """
     dual_dataset.sync()
 
-    case = dual_dataset.case.set_index("gene_id")
-    control = dual_dataset.control.set_index("gene_id")
+    case = dual_dataset.case.set_index(dual_dataset.on)
+    control = dual_dataset.control.set_index(dual_dataset.on)
     case_means = case.apply(mean, axis=1)
     control_means = control.apply(mean, axis=1)
 
     # Assume that the values are logged
     fcs = case_means.to_numpy() - control_means.to_numpy()
 
-    frame = pd.DataFrame({"gene_id": dual_dataset.case["gene_id"], "ranking": fcs})
+    frame = pd.DataFrame({dual_dataset.on: dual_dataset.case[dual_dataset.on], "ranking": fcs})
 
     return frame
 
