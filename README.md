@@ -17,10 +17,12 @@ Currently supported ranking methods:
   average fold changes between the case and controls, without any form of
   prior normalization.
 - **Normalized Cohen's D**: The `norm_cohen_d` metric normalies the data with
-  the median of ratios method used by DESeq2 and implemented in pydeseq2, and
+  the median of ratios method used by `DESeq2` and implemented in pydeseq2, and
   then computes cohen's D on the resulting normalized counts.
 - **DESeq2 Shrunk Log Fold Change**: Uses `DESeq2`'s LFC shrinking method to
   compute LFCs, and uses them as ranking metric.
+- **Normalized Fold Change**: Identical to the fold-change method, but normalizes
+  with the median of ratios method before computing the fold change value.
 
 You can use `generanker --list-methods` for a list of all the methods.
 
