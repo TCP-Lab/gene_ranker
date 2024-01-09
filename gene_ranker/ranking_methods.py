@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 import shutil
 from pydeseq2.ds import DeseqDataSet, DeseqStats
-from multiprocessing import cpu_count
 import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm

@@ -56,9 +56,6 @@ def test_data_filtering_only_in(test_case_data):
         }
     )
 
-    print(new_data)
-    print(expected)
-    
     assert new_data.equals(expected)
 
 
@@ -72,9 +69,6 @@ def test_fold_change_ranking(test_case_data, test_control_data):
         "ranking": [-2.66666666, -0.4, 4.6],
     })
 
-    print(result)
-    print(expected)
-    
     # The `assert` is in the function itself. Used for tolerance of estimates
     # by default allows a tolerance of 1e-5
     assert_frame_equal(result, expected)
@@ -116,7 +110,16 @@ def test_deseq2_norm():
     norm_counts = pydeseq2.preprocessing.deseq2_norm(data)[0].transpose()
     norm_counts["gene_id"] = norm_counts.index
     norm_counts = norm_counts.reset_index(drop=True)
-    print(norm_counts)
-    print(norm_data)
     assert_frame_equal(norm_counts, norm_data, check_like=True)
+
+
+def test_move_col_to_front():
+    original = pd.DataFrame(
+            {"first": [0, 1, 2], "second": [3, 2, 1]}
+        )
+    expected = pd.DataFrame(
+            {"second": [3, 2, 1], "first": [0, 1, 2]}
+        )
+    res = move_col_to_front(original, "second")
+    assert res.equals(expected)
 

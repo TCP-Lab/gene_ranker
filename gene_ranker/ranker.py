@@ -10,8 +10,7 @@ from typing import Optional
 from gene_ranker.dual_dataset import DualDataset
 from gene_ranker.ranking_methods import RankingMethod
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger("archon")  # An archon was an ancient greek magistrate
+log = logging.getLogger(__name__)
 
 def filter_dataset(
     data: pd.DataFrame,

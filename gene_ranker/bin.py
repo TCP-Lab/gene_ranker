@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 
-log = logging.getLogger("archon")
+log = logging.getLogger(__name__)
 
 class ListMethodsAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
