@@ -119,6 +119,7 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     
     data.deseq2()
     stats = DeseqStats(data)
+    stats.summary()
     stats.lfc_shrink(coeff="status_case_vs_control")
 
     shrunk = stats.LFC
