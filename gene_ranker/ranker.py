@@ -65,7 +65,7 @@ def run_method(
     control_matrix_data: pd.DataFrame = pd.read_csv(control_matrix)
 
     log.info(f"Loaded a {case_matrix_data.shape[1]} col by {case_matrix_data.shape[0]} rows case matrix from {case_matrix}")
-    log.info(f"Loaded a {control_matrix_data.shape[1]} col by {control_matrix_data.shape[0]} rows case matrix from {control_matrix}")
+    log.info(f"Loaded a {control_matrix_data.shape[1]} col by {control_matrix_data.shape[0]} rows control matrix from {control_matrix}")
 
     dual_dataset = DualDataset(case=case_matrix_data, control=control_matrix_data, on=shared_col)
 
