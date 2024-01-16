@@ -8,6 +8,7 @@ from pydeseq2.ds import DeseqDataSet, DeseqStats
 import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm
+from numpy import log2
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
@@ -87,6 +88,9 @@ def norm_with_deseq(data: pd.DataFrame, id_col = None):
     data = data.map(int)
     data = data.transpose()
     data = deseq2_norm(data)[0].transpose()
+    
+    # Return to logged values
+    data = log2(data + 1)
 
     if id_col:
         data[id_col] = data.index
