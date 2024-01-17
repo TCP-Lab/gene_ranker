@@ -22,10 +22,15 @@ gene_3,4.6
 """
 expected_cohen_d = """\
 gene_id,ranking
-gene_1,-2.1213203435596424
-gene_2,0.8142253935739803
-gene_3,1.9986492873450863
+gene_1,-2.0
+gene_2,0.7914728801198858
+gene_3,9.129127819482877
 """
+
+# This is before the change of correcting the normalization log2
+# gene_1,-2.1213203435596424
+# gene_2,0.8142253935739803
+# gene_3,1.9986492873450863
 
 @pytest.fixture
 def case_data_path(tmp_path: Path):
