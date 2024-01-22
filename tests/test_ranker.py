@@ -1,7 +1,7 @@
 import pytest
 from gene_ranker.ranker import filter_dataset
 from gene_ranker.dual_dataset import DualDataset
-from gene_ranker.ranking_methods import fold_change_ranking, move_col_to_front
+from gene_ranker.ranking_methods import fold_change_ranking, move_col_to_front, signal_to_noise_ratio
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pydeseq2
@@ -123,3 +123,14 @@ def test_move_col_to_front():
     res = move_col_to_front(original, "second")
     assert res.equals(expected)
 
+def test_signal_to_noise_ratio(test_case_data, test_control_data):
+    dual_data = DualDataset(case = test_case_data, control=test_control_data)
+
+    expected = pd.DataFrame({
+        "gene_id": ["gene_1", "gene_2", "gene_3"],
+        "ranking": [-0.6253909, -1.0638298, 0.6423481]
+    })
+
+    computed = signal_to_noise_ratio(dual_data)
+
+    assert_frame_equal(expected, computed, check_like=True)

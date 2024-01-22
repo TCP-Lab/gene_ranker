@@ -1,6 +1,6 @@
 from gene_ranker.dual_dataset import DualDataset
 import pandas as pd
-from statistics import mean
+from statistics import mean, variance
 from dataclasses import dataclass
 from typing import Callable, Optional
 import shutil
@@ -167,6 +167,35 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 def norm_hedges_g_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     raise NotImplementedError("This is not implemented yet, sorry!")
 
+def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
+    if dual_dataset.case.empty or dual_dataset.control.empty:
+        raise ValueError("Case or control matrix is empty. Cannot continue.")
+
+    # Compute the row variances
+    merged = dual_dataset.merged.loc[:, dual_dataset.merged.columns != dual_dataset.on]
+    variances = merged.apply(variance, axis=1)
+
+    # Compute the mean case/control diffs
+    case = dual_dataset.case.loc[:, dual_dataset.case.columns != dual_dataset.on]
+    control = dual_dataset.control.loc[:, dual_dataset.control.columns != dual_dataset.on]
+
+    diffs = case.apply(mean, axis=1) - control.apply(mean, axis=1)
+
+    # Compute the signal to noise ratio
+    ratio = diffs / variances
+
+    return pd.DataFrame({
+        dual_dataset.on: dual_dataset.merged[dual_dataset.on],
+        "ranking": ratio
+    })
+
+
+def norm_signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
+    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+
+    return signal_to_noise_ratio(dual_dataset)
+
+
 
 # Tried with an enum but it's just too much of a bother to implement.
 # A simple dict is fine, ultimately.
@@ -201,4 +230,17 @@ RANKING_METHODS = {
         parser = None,
         desc = "Use a DESeq2-normalized Hedges' G metric"
     ),
+    "s2n_ratio": RankingMethod(
+        name = "Signal to noise ratio",
+        exec = signal_to_noise_ratio,
+        parser=None,
+        desc = "Use the signal to noise ratio (diff of means divided by variance)"
+    ),
+    "norm_s2n_ratio": RankingMethod(
+        name = "Normalized signal to noise ratio",
+        exec = norm_signal_to_noise_ratio,
+        parser=None,
+        desc = "Use the signal to noise ratio metric on normalized data"
+    ),
 }
+
