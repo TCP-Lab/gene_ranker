@@ -190,8 +190,6 @@ def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
 
     # The double unpack in because .iterrows() -> (index, row)
     for (_, x), (_, y) in zip(case.iterrows(), control.iterrows()):
-        print(x)
-        print(y)
         stats.append(bws_test(x, y).statistic)
 
     return pd.DataFrame({
