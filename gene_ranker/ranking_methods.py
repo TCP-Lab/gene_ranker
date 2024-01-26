@@ -9,7 +9,7 @@ import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm
 from numpy import log2
-from scipy.stats import bws_test
+from scipy.stats._bws_test import _bws_statistic
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
@@ -190,7 +190,11 @@ def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
 
     # The double unpack in because .iterrows() -> (index, row)
     for (_, x), (_, y) in zip(case.iterrows(), control.iterrows()):
-        stats.append(bws_test(x, y).statistic)
+        # I needed to get the private method for the statistic that is then
+        # resampled many times for the test. The signature therefore is a bit
+        # cryptic. The last 0 is the axis but it has no effect on the call.
+        # (as far as I can see) and in any case is what bws_test uses
+        stats.append(_bws_statistic(x, y, 'two-sided', 0))
 
     return pd.DataFrame({
         dual_dataset.on: dual_dataset.merged[dual_dataset.on],
