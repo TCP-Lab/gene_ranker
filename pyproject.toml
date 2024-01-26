@@ -13,7 +13,8 @@ dynamic = ["version"]
 dependencies = [
     "pydeseq2~=0.4",
     "pandas~=2.0",
-    "colorama~=0.4"
+    "colorama~=0.4",
+    "scipy~=1.12"
 ]
 
 [project.urls]

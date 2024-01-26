@@ -26,6 +26,12 @@ gene_1,-2.0
 gene_2,0.7914728801198858
 gene_3,9.129127819482877
 """
+expected_bws_test = """\
+gene_id,ranking
+gene_1,-2.0
+gene_2,0.7914728801198858
+gene_3,9.129127819482877
+"""
 
 # This is before the change of correcting the normalization log2
 # gene_1,-2.1213203435596424
@@ -72,3 +78,14 @@ def test_integration_cohen(tmp_path, case_data_path, control_data_path):
 
     assert output == expected_cohen_d
 
+def test_integration_bws(tmp_path, case_data_path, control_data_path):
+    target = tmp_path / "output.csv"
+    args = [case_data_path, control_data_path, "bws_test", "--output-file", target]
+    args = [str(x) for x in args]
+
+    bin(args)
+
+    with target.open("r") as stream:
+        output = stream.read()
+
+    assert output == expected_cohen_d

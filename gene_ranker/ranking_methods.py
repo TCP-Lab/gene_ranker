@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm
 from numpy import log2
+from scipy.stats import bws_test
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
@@ -55,21 +56,6 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return frame
 
-def norm_fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
-    """Identical to fold_change_ranking, but normalize beforehand.
-
-    Args:
-        dual_dataset (DualDataset): A DualDataset to calculate the result from.
-    Returns:
-        A pd.DataFrame with two columns, a `gene_id` column and a `ranking` column.
-    """
-    dual_dataset.sync()
-
-    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
-
-    return fold_change_ranking(dual_dataset)
-
-
 def move_col_to_front(data: pd.DataFrame, col_name) -> pd.DataFrame:
     cols = data.columns.tolist()
     assert col_name in cols
@@ -97,6 +83,14 @@ def norm_with_deseq(data: pd.DataFrame, id_col = None):
         data.reset_index(drop=True)
 
     return data
+
+def norm_wrapper(exec: Callable, *args, **kwargs):
+    def wrapped(dual_dataset):
+        dual_dataset.sync()
+        dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+
+        return exec(dual_dataset, *args, **kwargs)
+    return wrapped
 
 def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     case_cols = [x for x in dual_dataset.case.columns if x != dual_dataset.on]
@@ -163,10 +157,6 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return data
 
-
-def norm_hedges_g_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
-    raise NotImplementedError("This is not implemented yet, sorry!")
-
 def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
     if dual_dataset.case.empty or dual_dataset.control.empty:
         raise ValueError("Case or control matrix is empty. Cannot continue.")
@@ -190,11 +180,24 @@ def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
     })
 
 
-def norm_signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
-    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
+def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
+    dual_dataset.sync()
+    
+    # The statistic is identical if we swap case and controls
+    case = dual_dataset.case.loc[:, dual_dataset.case.columns != dual_dataset.on]
+    control = dual_dataset.control.loc[:, dual_dataset.control.columns != dual_dataset.on]
+    stats = []
 
-    return signal_to_noise_ratio(dual_dataset)
+    # The double unpack in because .iterrows() -> (index, row)
+    for (_, x), (_, y) in zip(case.iterrows(), control.iterrows()):
+        print(x)
+        print(y)
+        stats.append(bws_test(x, y).statistic)
 
+    return pd.DataFrame({
+        dual_dataset.on: dual_dataset.merged[dual_dataset.on],
+        "ranking": stats
+    })
 
 
 # Tried with an enum but it's just too much of a bother to implement.
@@ -220,15 +223,9 @@ RANKING_METHODS = {
     ),
     "norm_fold_change": RankingMethod(
         name = "Normalized Fold Change",
-        exec = norm_fold_change_ranking,
+        exec = norm_wrapper(fold_change_ranking),
         parser = None,
         desc = "Use a DESeq2-normalized fold change metric"
-    ),
-    "norm_hedges_g": RankingMethod(
-        name = "Normalized Hedges' G",
-        exec = norm_hedges_g_ranking,
-        parser = None,
-        desc = "Use a DESeq2-normalized Hedges' G metric"
     ),
     "s2n_ratio": RankingMethod(
         name = "Signal to noise ratio",
@@ -238,7 +235,19 @@ RANKING_METHODS = {
     ),
     "norm_s2n_ratio": RankingMethod(
         name = "Normalized signal to noise ratio",
-        exec = norm_signal_to_noise_ratio,
+        exec = norm_wrapper(signal_to_noise_ratio),
+        parser=None,
+        desc = "Use the signal to noise ratio metric on normalized data"
+    ),
+    "bws_test": RankingMethod(
+        name = "Baumgartner-Weiss-Schindler test statistic",
+        exec = bws_rank,
+        parser=None,
+        desc = "Use the BWS test statistic, which works well with high N samples"
+    ),
+    "norm_bws_test": RankingMethod(
+        name = "Normalized Baumgartner-Weiss-Schindler test statistic",
+        exec = norm_wrapper(bws_rank),
         parser=None,
         desc = "Use the signal to noise ratio metric on normalized data"
     ),
