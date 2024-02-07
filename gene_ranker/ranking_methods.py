@@ -8,7 +8,7 @@ from pydeseq2.ds import DeseqDataSet, DeseqStats
 import tempfile
 import subprocess
 from pydeseq2.preprocessing import deseq2_norm
-from numpy import log2
+from numpy import log2, std
 from scipy.stats._bws_test import _bws_statistic
 
 class MissingExternalDependency(Exception):
@@ -158,27 +158,28 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     return data
 
 def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
-    if dual_dataset.case.empty or dual_dataset.control.empty:
-        raise ValueError("Case or control matrix is empty. Cannot continue.")
 
-    # Compute the row variances
-    merged = dual_dataset.merged.loc[:, dual_dataset.merged.columns != dual_dataset.on]
-    variances = merged.apply(variance, axis=1)
+    dual_dataset.sync()
 
-    # Compute the mean case/control diffs
-    case = dual_dataset.case.loc[:, dual_dataset.case.columns != dual_dataset.on]
-    control = dual_dataset.control.loc[:, dual_dataset.control.columns != dual_dataset.on]
+    case = dual_dataset.case.set_index(dual_dataset.on)
+    control = dual_dataset.control.set_index(dual_dataset.on)
+    if case.empty:
+        raise ValueError("Case matrix is empty. Cannot compute fold change.")
+    if control.empty:
+        raise ValueError("Control matrix is empty. Cannot compute fold change.")
+    case_means = case.apply(mean, axis=1)
+    case_SDs = case.apply(std, axis=1)
+    control_means = control.apply(mean, axis=1)
+    control_SDs = control.apply(std, axis=1)
 
-    diffs = case.apply(mean, axis=1) - control.apply(mean, axis=1)
+    # Assume that the values are logged
+    signal = case_means.to_numpy() - control_means.to_numpy()
+    noise = case_SDs.to_numpy() + control_SDs.to_numpy()
+    s2n = signal / noise
 
-    # Compute the signal to noise ratio
-    ratio = diffs / variances
-
-    return pd.DataFrame({
-        dual_dataset.on: dual_dataset.merged[dual_dataset.on],
-        "ranking": ratio
-    })
-
+    frame = pd.DataFrame({dual_dataset.on: dual_dataset.case[dual_dataset.on], "ranking": s2n})
+    
+    return frame
 
 def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
     dual_dataset.sync()
