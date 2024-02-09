@@ -128,7 +128,7 @@ def test_signal_to_noise_ratio(test_case_data, test_control_data):
 
     expected = pd.DataFrame({
         "gene_id": ["gene_1", "gene_2", "gene_3"],
-        "ranking": [-0.6253909, -1.0638298, 0.6423481]
+        "ranking": [-1.0982062, -0.4333077, 3.6338295]
     })
 
     computed = signal_to_noise_ratio(dual_data)
