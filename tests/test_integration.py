@@ -88,4 +88,4 @@ def test_integration_bws(tmp_path, case_data_path, control_data_path):
     with target.open("r") as stream:
         output = stream.read()
 
-    assert output == expected_cohen_d
+    assert output == expected_bws_test
