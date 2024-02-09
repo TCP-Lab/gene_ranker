@@ -1,6 +1,6 @@
 from gene_ranker.dual_dataset import DualDataset
 import pandas as pd
-from statistics import mean, variance
+from statistics import mean
 from dataclasses import dataclass
 from typing import Callable, Optional
 import shutil
@@ -158,7 +158,6 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     return data
 
 def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
-
     dual_dataset.sync()
 
     case = dual_dataset.case.set_index(dual_dataset.on)
@@ -167,17 +166,22 @@ def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
         raise ValueError("Case matrix is empty. Cannot compute fold change.")
     if control.empty:
         raise ValueError("Control matrix is empty. Cannot compute fold change.")
+
     case_means = case.apply(mean, axis=1)
-    case_SDs = case.apply(std, axis=1)
+    case_stdev = case.apply(std, axis=1)
     control_means = control.apply(mean, axis=1)
-    control_SDs = control.apply(std, axis=1)
+    control_stdev = control.apply(std, axis=1)
 
     # Assume that the values are logged
     signal = case_means.to_numpy() - control_means.to_numpy()
-    noise = case_SDs.to_numpy() + control_SDs.to_numpy()
-    s2n = signal / noise
+    noise = case_stdev.to_numpy() + control_stdev.to_numpy()
 
-    frame = pd.DataFrame({dual_dataset.on: dual_dataset.case[dual_dataset.on], "ranking": s2n})
+    frame = pd.DataFrame(
+        {
+            dual_dataset.on: dual_dataset.case[dual_dataset.on],
+            "ranking": signal / noise
+        }
+    )
     
     return frame
 
