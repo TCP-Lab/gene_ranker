@@ -10,6 +10,28 @@ import subprocess
 from pydeseq2.preprocessing import deseq2_norm
 from numpy import log2, std
 from scipy.stats._bws_test import _bws_statistic
+from functools import wraps
+
+
+def fail_if_empty(func):
+    """Fail fast if case or control are empty
+
+    A decorator for functions that take `dual_dataset`s as input and should
+    fail if either case or control matrices are empty.
+    """
+    @wraps(func)
+    def wrap(dual_dataset, *args, **kwargs):    
+        case = dual_dataset.case.set_index(dual_dataset.on)
+        control = dual_dataset.control.set_index(dual_dataset.on)
+        if case.empty:
+            raise ValueError("Case matrix is empty. Cannot compute fold change.")
+        if control.empty:
+            raise ValueError("Control matrix is empty. Cannot compute fold change.")
+
+        return func(dual_dataset, *args, **kwargs)
+
+    return wrap
+
 
 class MissingExternalDependency(Exception):
     """Raised when an external dependency is missing"""
@@ -26,6 +48,7 @@ class RankingMethod:
     desc: Optional[str] = None
     """A human-friendly description of the method."""
 
+@fail_if_empty
 def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     """Perform a simple fold-change ranking metric.
 
@@ -42,10 +65,6 @@ def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     case = dual_dataset.case.set_index(dual_dataset.on)
     control = dual_dataset.control.set_index(dual_dataset.on)
-    if case.empty:
-        raise ValueError("Case matrix is empty. Cannot compute fold change.")
-    if control.empty:
-        raise ValueError("Control matrix is empty. Cannot compute fold change.")
     case_means = case.apply(mean, axis=1)
     control_means = control.apply(mean, axis=1)
 
@@ -92,6 +111,7 @@ def norm_wrapper(exec: Callable, *args, **kwargs):
         return exec(dual_dataset, *args, **kwargs)
     return wrapped
 
+@fail_if_empty
 def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     case_cols = [x for x in dual_dataset.case.columns if x != dual_dataset.on]
     ctrl_cols = [x for x in dual_dataset.control.columns if x != dual_dataset.on]
@@ -129,7 +149,7 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return result
 
-
+@fail_if_empty
 def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     if not shutil.which("fast-cohen"):
         raise MissingExternalDependency((
@@ -138,10 +158,6 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
         ))
 
     dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
-    if dual_dataset.case.empty:
-        raise ValueError("Case matrix is empty. Cannot compute norm cohen D")
-    if dual_dataset.control.empty:
-        raise ValueError("Control matrix is empty. Cannot compute norm cohen D")
 
     with tempfile.NamedTemporaryFile() as case, \
             tempfile.NamedTemporaryFile() as control, \
@@ -157,15 +173,12 @@ def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
 
     return data
 
+@fail_if_empty
 def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
     dual_dataset.sync()
 
     case = dual_dataset.case.set_index(dual_dataset.on)
     control = dual_dataset.control.set_index(dual_dataset.on)
-    if case.empty:
-        raise ValueError("Case matrix is empty. Cannot compute fold change.")
-    if control.empty:
-        raise ValueError("Control matrix is empty. Cannot compute fold change.")
 
     case_means = case.apply(mean, axis=1)
     case_stdev = case.apply(std, axis=1)
@@ -185,6 +198,7 @@ def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
     
     return frame
 
+@fail_if_empty
 def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
     dual_dataset.sync()
     
