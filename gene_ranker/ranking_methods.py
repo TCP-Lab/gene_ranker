@@ -235,16 +235,16 @@ RANKING_METHODS = {
         desc = "Use DESeq2-shrunk fold changes. Always normalizes the input"
     ),
     "cohen_d": RankingMethod(
-        name = "Cohen's D",
+        name = "Cohen's d",
         exec = cohen_d_ranking,
         parser = None,
-        desc = "Use the Cohen's D metric"
+        desc = "Use the Cohen's d metric"
     ),
     "norm_cohen_d": RankingMethod(
-        name = "Normalized Cohen's D",
+        name = "Normalized Cohen's d",
         exec = norm_wrapper(cohen_d_ranking),
         parser = None,
-        desc = "Use a DESeq2-normalized Cohen's D metric"
+        desc = "Use a DESeq2-normalized Cohen's d metric"
     ),
     "norm_fold_change": RankingMethod(
         name = "Normalized Fold Change",
