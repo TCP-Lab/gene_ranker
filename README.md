@@ -14,16 +14,24 @@ The program un-logs the data when appropriate (e.g. running DESeq2).
 
 Currently supported ranking methods:
 - **Fold Change**: The `fold_change` method computes a simple difference of 
-  average fold changes between the case and controls, without any form of
-  prior normalization.
-- **Normalized Cohen's D**: The `norm_cohen_d` metric normalies the data with
-  the median of ratios method used by `DESeq2` and implemented in pydeseq2, and
-  then computes cohen's D on the resulting normalized counts.
+  average fold changes between the case and controls.
+- **Cohen's d**: The `cohen_d` metric computes Cohen's d between the different
+  expression values of each gene.
 - **DESeq2 Shrunk Log Fold Change**: Uses `DESeq2`'s LFC shrinking method to
   compute LFCs, and uses them as ranking metric.
-- **Normalized Fold Change**: Identical to the fold-change method, but normalizes
-  with the median of ratios method before computing the fold change value.
+  This uses PyDESeq2, so the input data is always normalized in the process.
+- **Signal to Noise ratio**: Compute the signal to noise ratio between the 
+  control and case genes.
+  This is roughly the mean divided by the variance of each gene.
+- **Baumgartner-Weiss-Schindler test statistic**: Compute the
+  [BWS statistic](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bws_test.html)
+  for each gene. Uses a `scipy` primitive so it's much faster than using
+  `bws_test`.
 
+Most of these methods come with a normalized version, where the input is first
+normalized with the ["mean of ratios" method](https://github.com/owkin/PyDESeq2/blob/39b6a373abb85991b5ac50f5f5b26a1a290d890b/pydeseq2/preprocessing.py#L8-L31)
+(as implemented by DESeq2).
+They are usually named as `norm_<method>`.
 You can use `generanker --list-methods` for a list of all the methods.
 
 ## Installation
