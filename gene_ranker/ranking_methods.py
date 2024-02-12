@@ -274,7 +274,7 @@ RANKING_METHODS = {
         name = "Normalized Baumgartner-Weiss-Schindler test statistic",
         exec = norm_wrapper(bws_rank),
         parser=None,
-        desc = "Use the signal to noise ratio metric on normalized data"
+        desc = "Same as BWS, but on normalized data"
     ),
 }
 
