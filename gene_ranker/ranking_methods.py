@@ -181,9 +181,9 @@ def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
     control = dual_dataset.control.set_index(dual_dataset.on)
 
     case_means = case.apply(mean, axis=1)
-    case_stdev = case.apply(std, axis=1)
+    case_stdev = case.apply(lambda x: std(x, ddof=1), axis=1)
     control_means = control.apply(mean, axis=1)
-    control_stdev = control.apply(std, axis=1)
+    control_stdev = control.apply(lambda x: std(x, ddof=1), axis=1)
 
     # Assume that the values are logged
     signal = case_means.to_numpy() - control_means.to_numpy()
