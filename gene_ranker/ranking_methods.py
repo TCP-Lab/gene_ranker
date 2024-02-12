@@ -150,14 +150,12 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     return result
 
 @fail_if_empty
-def norm_cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
+def cohen_d_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     if not shutil.which("fast-cohen"):
         raise MissingExternalDependency((
             "Missing the fast-cohen executable."
             " See https://github.com/mrhedmad/fast-cohen/ to download."
         ))
-
-    dual_dataset.merged = norm_with_deseq(dual_dataset.merged, dual_dataset.on)
 
     with tempfile.NamedTemporaryFile() as case, \
             tempfile.NamedTemporaryFile() as control, \
@@ -234,11 +232,17 @@ RANKING_METHODS = {
         name = "DESeq2 Shrinkage",
         exec = deseq_shrinkage_ranking,
         parser = None,
-        desc = "Use DESeq2-shrunk fold changes."
+        desc = "Use DESeq2-shrunk fold changes. Always normalizes the input"
+    ),
+    "cohen_d": RankingMethod(
+        name = "Cohen's D",
+        exec = cohen_d_ranking,
+        parser = None,
+        desc = "Use the Cohen's D metric"
     ),
     "norm_cohen_d": RankingMethod(
         name = "Normalized Cohen's D",
-        exec = norm_cohen_d_ranking,
+        exec = norm_wrapper(cohen_d_ranking),
         parser = None,
         desc = "Use a DESeq2-normalized Cohen's D metric"
     ),
