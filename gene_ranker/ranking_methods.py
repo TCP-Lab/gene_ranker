@@ -206,12 +206,12 @@ def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
     stats = []
 
     # The double unpack in because .iterrows() -> (index, row)
-    for (_, x), (_, y) in zip(case.iterrows(), control.iterrows()):
+    for (_, case), (_, control) in zip(case.iterrows(), control.iterrows()):
         # I needed to get the private method for the statistic that is then
         # resampled many times for the test. The signature therefore is a bit
         # cryptic. The last 0 is the axis but it has no effect on the call.
         # (as far as I can see) and in any case is what bws_test uses
-        stats.append(_bws_statistic(x, y, 'two-sided', 0))
+        stats.append(_bws_statistic(case, control, 'one-sided', 0))
 
     return pd.DataFrame({
         dual_dataset.on: dual_dataset.merged[dual_dataset.on],
