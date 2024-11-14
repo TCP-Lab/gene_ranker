@@ -200,7 +200,6 @@ def signal_to_noise_ratio(dual_dataset: DualDataset) -> pd.DataFrame:
 def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
     dual_dataset.sync()
     
-    # The statistic is identical if we swap case and controls
     case = dual_dataset.case.loc[:, dual_dataset.case.columns != dual_dataset.on]
     control = dual_dataset.control.loc[:, dual_dataset.control.columns != dual_dataset.on]
     stats = []
@@ -209,8 +208,7 @@ def bws_rank(dual_dataset: DualDataset) -> pd.DataFrame:
     for (_, case), (_, control) in zip(case.iterrows(), control.iterrows()):
         # I needed to get the private method for the statistic that is then
         # resampled many times for the test. The signature therefore is a bit
-        # cryptic. The last 0 is the axis but it has no effect on the call.
-        # (as far as I can see) and in any case is what bws_test uses
+        # cryptic. The last 0 is the axis.
         stats.append(_bws_statistic(case, control, 'one-sided', 0))
 
     return pd.DataFrame({
