@@ -34,13 +34,6 @@ def bin(args = None):
         "control_matrix", help="Expression Matrix with log2 expression of control samples.", type=Path
     )
 
-    # TODO: Edit this to add the custom subparsers from each ranking method.
-    parser.add_argument(
-        "method",
-        help="Ranking method",
-        choices=list(RANKING_METHODS.keys()),
-    )
-
     parser.add_argument(
         "--output-file", help="Output file path", type=Path, default=None
     )
@@ -48,13 +41,26 @@ def bin(args = None):
     parser.add_argument(
         "--id-col", help="Name of shared ID comlumn between files", type=str, default="gene_id"
     )
+
+    general_args = [x.dest for x in parser._actions] + ["method"]
+
+    # Add the individual parsers
+    subparsers = parser.add_subparsers(dest="method")
+    for key, values in RANKING_METHODS.items():
+        if not values.parser:
+            log.warn(f"Parser {key} has no parser. Skipping...")
+            continue
+        subparsers.add_parser(key, parents=[values.parser], add_help=False)
+
     args = parser.parse_args(args)
+    extra_args = {k: v for k, v in vars(args).items() if k not in general_args}
 
     result = run_method(
         case_matrix=args.case_matrix,
         control_matrix=args.control_matrix,
         method=RANKING_METHODS[args.method],
-        shared_col=args.id_col
+        shared_col=args.id_col,
+        extra_args = extra_args
     )
     
     log.info("Writing output to {}".format(args.output_file if args.output_file else "stdout"))

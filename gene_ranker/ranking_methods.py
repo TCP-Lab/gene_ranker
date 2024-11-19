@@ -11,6 +11,7 @@ from pydeseq2.preprocessing import deseq2_norm
 from numpy import log2, std
 from scipy.stats._bws_test import _bws_statistic
 from functools import wraps
+from argparse import ArgumentParser
 
 
 def fail_if_empty(func):
@@ -47,6 +48,11 @@ class RankingMethod:
     """An ArgumentParser to use to add options to the callable for this method."""
     desc: Optional[str] = None
     """A human-friendly description of the method."""
+
+    def __post_init__(self):
+        if self.parser is None:
+            # Set a dummy parser with no options.
+            self.parser = ArgumentParser(self.name, description=self.desc)
 
 @fail_if_empty
 def fold_change_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
