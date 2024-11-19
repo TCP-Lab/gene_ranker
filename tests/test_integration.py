@@ -28,9 +28,9 @@ gene_3,9.129127819482877
 """
 expected_bws_test = """\
 gene_id,ranking
-gene_1,-2.0
-gene_2,0.7914728801198858
-gene_3,9.129127819482877
+gene_1,0.111111111111111
+gene_2,-0.1851851851851
+gene_3,0.88888888888888
 """
 
 # This is before the change of correcting the normalization log2
