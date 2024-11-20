@@ -5,6 +5,8 @@ import sys
 import argparse
 import logging
 
+from gene_ranker import __version__
+
 log = logging.getLogger(__name__)
 
 class ListMethodsAction(argparse.Action):
@@ -13,6 +15,12 @@ class ListMethodsAction(argparse.Action):
         for key, method in RANKING_METHODS.items():
             res += f"\t'{key}' - {method.name}: {method.desc}\n"
         sys.stdout.write(res)
+        parser.exit()
+        return
+
+class PrintVersionAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(__version__)
         parser.exit()
         return
 
@@ -25,6 +33,13 @@ def bin(args = None):
         help="List all available methods and a brief description.",
         nargs=0,
         action=ListMethodsAction,
+    )
+
+    parser.add_argument(
+        "--version", "-v",
+        help="Print version and exit",
+        nargs=0,
+        action=PrintVersionAction,
     )
 
     parser.add_argument(
