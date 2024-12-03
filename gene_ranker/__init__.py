@@ -6,7 +6,8 @@ from colorama import Back, Fore, Style, init
 __version__ = "0.5.0"
 __all__ = ["__version__"]
 
-init() # Init colorama
+init()  # Init colorama
+
 
 class ColorFormatter(logging.Formatter):
     # Change this dictionary to suit your coloring needs!

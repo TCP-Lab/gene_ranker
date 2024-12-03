@@ -2,15 +2,18 @@
 Rank genes based on various metrics.
 """
 
-import pandas as pd
 import logging
 from pathlib import Path
 from statistics import mean
 from typing import Optional
+
+import pandas as pd
+
 from gene_ranker.dual_dataset import DualDataset
-from gene_ranker.ranking_methods import RankingMethod
+from gene_ranker.methods.base import RankingMethod
 
 log = logging.getLogger(__name__)
+
 
 def filter_dataset(
     data: pd.DataFrame,
@@ -43,7 +46,7 @@ def filter_dataset(
 
     data[id_col] = data.index
     data = data.reset_index(drop=True)
-    
+
     col_order = [id_col] + [x for x in data.columns if x != id_col]
     data = data[col_order]
 
@@ -51,8 +54,11 @@ def filter_dataset(
 
 
 def run_method(
-    case_matrix: Path, control_matrix: Path, method: RankingMethod,
-    shared_col: str = "gene_id", extra_args: Optional[dict] = None
+    case_matrix: Path,
+    control_matrix: Path,
+    method: RankingMethod,
+    shared_col: str = "gene_id",
+    extra_args: Optional[dict] = None,
 ) -> pd.DataFrame:
     """Run a RankingMethod on two frames.
 
@@ -64,12 +70,17 @@ def run_method(
     case_matrix_data: pd.DataFrame = pd.read_csv(case_matrix)
     control_matrix_data: pd.DataFrame = pd.read_csv(control_matrix)
 
-    log.info(f"Loaded a {case_matrix_data.shape[1]} col by {case_matrix_data.shape[0]} rows case matrix from {case_matrix}")
-    log.info(f"Loaded a {control_matrix_data.shape[1]} col by {control_matrix_data.shape[0]} rows control matrix from {control_matrix}")
+    log.info(
+        f"Loaded a {case_matrix_data.shape[1]} col by {case_matrix_data.shape[0]} rows case matrix from {case_matrix}"
+    )
+    log.info(
+        f"Loaded a {control_matrix_data.shape[1]} col by {control_matrix_data.shape[0]} rows control matrix from {control_matrix}"
+    )
 
-    dual_dataset = DualDataset(case=case_matrix_data, control=control_matrix_data, on=shared_col)
+    dual_dataset = DualDataset(
+        case=case_matrix_data, control=control_matrix_data, on=shared_col
+    )
 
     result = method.exec(dual_dataset=dual_dataset, **extra_args)
 
     return result
-

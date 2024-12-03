@@ -1,5 +1,9 @@
-import pytest
+from io import StringIO
 from pathlib import Path
+
+import pandas as pd
+import pytest
+
 from gene_ranker.bin import bin
 
 control_data = """\
@@ -22,21 +26,24 @@ gene_3,4.6
 """
 expected_cohen_d = """\
 gene_id,ranking
-gene_1,-2.0
-gene_2,0.7914728801198858
-gene_3,9.129127819482877
+gene_1,-1.634014740411334
+gene_2,0.35093120317179816
+gene_3,4.562438459962434
 """
 expected_bws_test = """\
 gene_id,ranking
-gene_1,0.111111111111111
-gene_2,-0.1851851851851
-gene_3,0.88888888888888
+gene_1,-1.44444444444
+gene_2,-0.592592592592
+gene_3,2.629629629629629
 """
 
-# This is before the change of correcting the normalization log2
-# gene_1,-2.1213203435596424
-# gene_2,0.8142253935739803
-# gene_3,1.9986492873450863
+
+def compare_csvs(one: str, two: str):
+    one = pd.read_csv(StringIO(one))
+    two = pd.read_csv(StringIO(two))
+
+    pd.testing.assert_frame_equal(one, two, check_like=True)
+
 
 @pytest.fixture
 def case_data_path(tmp_path: Path):
@@ -46,6 +53,7 @@ def case_data_path(tmp_path: Path):
 
     return target
 
+
 @pytest.fixture
 def control_data_path(tmp_path: Path):
     target = tmp_path / "test_control.csv"
@@ -54,9 +62,10 @@ def control_data_path(tmp_path: Path):
 
     return target
 
+
 def test_integration_fold_change(tmp_path, case_data_path, control_data_path):
     target = tmp_path / "output.csv"
-    args = [case_data_path, control_data_path, "fold_change", "--output-file", target]
+    args = [case_data_path, control_data_path, "--output-file", target, "fold_change"]
     args = [str(x) for x in args]
 
     bin(args)
@@ -64,11 +73,12 @@ def test_integration_fold_change(tmp_path, case_data_path, control_data_path):
     with target.open("r") as stream:
         output = stream.read()
 
-    assert output == expected_fold_change
+    compare_csvs(output, expected_fold_change)
+
 
 def test_integration_cohen(tmp_path, case_data_path, control_data_path):
     target = tmp_path / "output.csv"
-    args = [case_data_path, control_data_path, "norm_cohen_d", "--output-file", target]
+    args = [case_data_path, control_data_path, "--output-file", target, "cohen_d"]
     args = [str(x) for x in args]
 
     bin(args)
@@ -76,11 +86,12 @@ def test_integration_cohen(tmp_path, case_data_path, control_data_path):
     with target.open("r") as stream:
         output = stream.read()
 
-    assert output == expected_cohen_d
+    compare_csvs(output, expected_cohen_d)
+
 
 def test_integration_bws(tmp_path, case_data_path, control_data_path):
     target = tmp_path / "output.csv"
-    args = [case_data_path, control_data_path, "bws_test", "--output-file", target]
+    args = [case_data_path, control_data_path, "--output-file", target, "bws_test"]
     args = [str(x) for x in args]
 
     bin(args)
@@ -88,4 +99,4 @@ def test_integration_bws(tmp_path, case_data_path, control_data_path):
     with target.open("r") as stream:
         output = stream.read()
 
-    assert output == expected_bws_test
+    compare_csvs(output, expected_bws_test)

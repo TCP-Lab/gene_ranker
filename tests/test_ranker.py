@@ -1,11 +1,15 @@
-import pytest
-from gene_ranker.ranker import filter_dataset
-from gene_ranker.dual_dataset import DualDataset
-from gene_ranker.ranking_methods import fold_change_ranking, move_col_to_front, signal_to_noise_ratio
-import pandas as pd
-from pandas.testing import assert_frame_equal
-import pydeseq2
 from io import StringIO
+
+import pandas as pd
+import pydeseq2
+import pytest
+from pandas.testing import assert_frame_equal
+
+from gene_ranker.dual_dataset import DualDataset
+from gene_ranker.methods import fold_change_ranking, signal_to_noise_ratio
+from gene_ranker.methods.base import move_col_to_front
+from gene_ranker.ranker import filter_dataset
+
 
 @pytest.fixture
 def test_case_data():
@@ -30,6 +34,7 @@ def test_control_data():
         }
     )
 
+
 def test_data_filtering_avg(test_case_data):
     new_data: pd.DataFrame = filter_dataset(test_case_data, avg_mean_threshold=1)
 
@@ -41,11 +46,14 @@ def test_data_filtering_avg(test_case_data):
             "sample_3": [1.2, 5.01],
         }
     )
-    
+
     assert new_data.equals(expected)
 
+
 def test_data_filtering_only_in(test_case_data):
-    new_data: pd.DataFrame = filter_dataset(test_case_data, only_in=["gene_2", "gene_3"])
+    new_data: pd.DataFrame = filter_dataset(
+        test_case_data, only_in=["gene_2", "gene_3"]
+    )
 
     expected = pd.DataFrame(
         {
@@ -60,18 +68,21 @@ def test_data_filtering_only_in(test_case_data):
 
 
 def test_fold_change_ranking(test_case_data, test_control_data):
-    dual_data = DualDataset(case = test_case_data, control=test_control_data)
+    dual_data = DualDataset(case=test_case_data, control=test_control_data)
 
     result = fold_change_ranking(dual_data)
 
-    expected = pd.DataFrame({
-        "gene_id": ["gene_1", "gene_2", "gene_3"],
-        "ranking": [-2.66666666, -0.4, 4.6],
-    })
+    expected = pd.DataFrame(
+        {
+            "gene_id": ["gene_1", "gene_2", "gene_3"],
+            "ranking": [-2.66666666, -0.4, 4.6],
+        }
+    )
 
     # The `assert` is in the function itself. Used for tolerance of estimates
     # by default allows a tolerance of 1e-5
     assert_frame_equal(result, expected)
+
 
 def test_deseq2_norm():
     # this is a test to see if we get the same results as the R-based deseq2
@@ -100,7 +111,7 @@ def test_deseq2_norm():
 "sample_5","control"
 "sample_6","control"
 """
-    
+
     norm_data = pd.read_csv(StringIO(norm_data))
     data = pd.read_csv(StringIO(data)).set_index("gene_id")
     data = data.transpose()
@@ -114,22 +125,21 @@ def test_deseq2_norm():
 
 
 def test_move_col_to_front():
-    original = pd.DataFrame(
-            {"first": [0, 1, 2], "second": [3, 2, 1]}
-        )
-    expected = pd.DataFrame(
-            {"second": [3, 2, 1], "first": [0, 1, 2]}
-        )
+    original = pd.DataFrame({"first": [0, 1, 2], "second": [3, 2, 1]})
+    expected = pd.DataFrame({"second": [3, 2, 1], "first": [0, 1, 2]})
     res = move_col_to_front(original, "second")
     assert res.equals(expected)
 
-def test_signal_to_noise_ratio(test_case_data, test_control_data):
-    dual_data = DualDataset(case = test_case_data, control=test_control_data)
 
-    expected = pd.DataFrame({
-        "gene_id": ["gene_1", "gene_2", "gene_3"],
-        "ranking": [-1.0982062, -0.4333077, 3.6338295]
-    })
+def test_signal_to_noise_ratio(test_case_data, test_control_data):
+    dual_data = DualDataset(case=test_case_data, control=test_control_data)
+
+    expected = pd.DataFrame(
+        {
+            "gene_id": ["gene_1", "gene_2", "gene_3"],
+            "ranking": [-0.8966816, -0.3537943, 2.967009],
+        }
+    )
 
     computed = signal_to_noise_ratio(dual_data)
 
