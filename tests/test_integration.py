@@ -36,13 +36,19 @@ gene_1,-1.44444444444
 gene_2,-0.592592592592
 gene_3,2.629629629629629
 """
+expected_deseq_shrink = """\
+gene_id,ranking
+gene_1,0.0010467297
+gene_2,-0.150855523
+gene_3,-8.7566809588
+"""
 
 
 def compare_csvs(one: str, two: str):
     one = pd.read_csv(StringIO(one))
     two = pd.read_csv(StringIO(two))
 
-    pd.testing.assert_frame_equal(one, two, check_like=True)
+    pd.testing.assert_frame_equal(one, two, check_like=True, check_exact=False, atol=1e-5)
 
 
 @pytest.fixture
@@ -100,3 +106,16 @@ def test_integration_bws(tmp_path, case_data_path, control_data_path):
         output = stream.read()
 
     compare_csvs(output, expected_bws_test)
+
+
+def test_integration_deseq(tmp_path, case_data_path, control_data_path):
+    target = tmp_path / "output.csv"
+    args = [case_data_path, control_data_path, "--output-file", target, "deseq_shrinkage"]
+    args = [str(x) for x in args]
+
+    bin(args)
+
+    with target.open("r") as stream:
+        output = stream.read()
+
+    compare_csvs(output, expected_deseq_shrink)

@@ -1,9 +1,12 @@
 import pandas as pd
+import logging
 
 from gene_ranker.methods.base import fail_if_empty
 from gene_ranker.dual_dataset import DualDataset
 
 from pydeseq2.ds import DeseqStats, DeseqDataSet
+
+log = logging.getLogger(__name__)
 
 
 @fail_if_empty
@@ -16,26 +19,27 @@ def deseq_shrinkage_ranking(dual_dataset: DualDataset) -> pd.DataFrame:
     data = dual_dataset.merged.set_index(dual_dataset.on)
 
     data = round((2**data) - 1)
-    data = data.applymap(int)
+    data = data.map(int)
     data = data.transpose()
 
     data = DeseqDataSet(
         counts=data,
         metadata=metadata,
-        design_factors="status",
-        ref_level=["status", "control"],
+        design="~status",
         quiet=True,
     )
 
     data.deseq2()
-    stats = DeseqStats(data)
-    stats.summary()
-    stats.lfc_shrink(coeff="status_case_vs_control")
+    stats = DeseqStats(data, ["status", "case", "control"])
+    stats.summary() # This computes parameters - it's not just for show
+    stats.lfc_shrink("status[T.control]")
 
     shrunk = stats.LFC
 
     result = pd.DataFrame(
-        {dual_dataset.on: shrunk.index, "ranking": shrunk["status_case_vs_control"]}
+        {dual_dataset.on: shrunk.index, "ranking": list(shrunk["status[T.control]"])}
     )
+
+    print(result)
 
     return result
