@@ -1,11 +1,15 @@
 import numpy as np
 import pandas as pd
 from numpy import ma
-from scipy.stats import find_repeats
+from itertools import compress
 
 from gene_ranker.dual_dataset import DualDataset
 from gene_ranker.methods.base import fail_if_empty
 
+def find_repeats(values):
+    uniq = np.unique_counts(values)
+    mask = [x != 1 for x in list(uniq.counts)]
+    return list(compress(list(uniq.values), mask))
 
 def rankdata(data):
     def _rank1d(data, use_missing=False):
@@ -20,7 +24,7 @@ def rankdata(data):
             rk[idx[n:]] = 0
 
         repeats = find_repeats(data.copy())
-        for r in repeats[0]:
+        for r in repeats:
             condition = (data == r).filled(False)
             rk[condition] = rk[condition].max()
         return rk
