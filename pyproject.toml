@@ -11,10 +11,10 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pydeseq2~=0.4",
-    "pandas~=2.0",
-    "colorama~=0.4",
-    "scipy~=1.12"
+    "pydeseq2",
+    "pandas",
+    "colorama",
+    "scipy"
 ]
 
 [project.urls]
